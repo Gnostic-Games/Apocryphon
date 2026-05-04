@@ -1,0 +1,11 @@
+{
+  "name": "ca.gnosticgames.apocryphon",
+  "version": "0.0.1",
+  "displayName": "Apocryphon",
+  "description": "Reusable code and boilerplate for our games",
+  "license": "MIT",
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.2"
+ }
+}
+
