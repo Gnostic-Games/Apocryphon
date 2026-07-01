@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
@@ -9,8 +10,11 @@ namespace Apocryphon.Localization
 {
     public static class LocalizationHandler
     {
-        static readonly Dictionary<string, StringTable> tables = new();
-        
+        static readonly Dictionary<string, StringTable         > tables         = new();
+        static readonly Dictionary<string, Func<string, string>> tagSubscribers = new();
+
+        static readonly Regex tagPattern = new(@"\{(\w+):([^{}]*)\}", RegexOptions.Compiled);
+
         public static string GetEntry(string table, string id) => GetEntry(table, id, null);
 
         public static string GetEntry(string table, string id, params object[]? args)
@@ -33,7 +37,40 @@ namespace Apocryphon.Localization
                 return $"Missing entry {id}";
             }
 
-            return localization;
+            return ProcessTags(localization);
+        }
+
+        public static void Subscribe(string tag, Func<string, string> handler)
+        {
+            if (tagSubscribers.ContainsKey(tag))
+            {
+                Debug.LogWarning($"Overwriting existing subscriber for tag {tag}");
+            }
+
+            tagSubscribers[tag] = handler;
+        }
+
+        public static void Unsubscribe(string tag)
+        {
+            tagSubscribers.Remove(tag);
+        }
+
+        private static string ProcessTags(string localization)
+        {
+            return tagPattern.Replace(localization, match =>
+            {
+                string tag  = match.Groups[1].Value;
+                string data = match.Groups[2].Value;
+
+                if (!tagSubscribers.TryGetValue(tag, out Func<string, string>? handler))
+                {
+                    Debug.LogWarning($"No subscriber for tag {tag}");
+
+                    return match.Value;
+                }
+
+                return handler(data);
+            });
         }
 
         private static StringTable? GetTable(string id)
