@@ -56,7 +56,7 @@ namespace Apocryphon.Localization
             tagSubscribers.Remove(tag);
         }
 
-        private static string ProcessTags(string localization)
+        public static string ProcessTags(string localization)
         {
             return tagPattern.Replace(localization, match =>
             {
